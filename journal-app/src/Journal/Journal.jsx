@@ -3,11 +3,23 @@ import { collection, getDocs, onSnapshot, orderBy, query } from 'firebase/firest
 import db from '../db';
 import { Link } from 'react-router-dom';
 import AddJournal from './AddJournal';
+import firebase from "firebase/compat/app";
 
 export default function Journal() {
     const [entries, setEntries] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
+    const [user, setUser] = useState(null);
+
+
+    useEffect(()=>{
+        const unsubscribe = firebase.auth().onAuthStateChanged(user=>{
+            console.log(user)
+            setUser(user)
+        })
+        return ()=>unsubscribe()
+    }, [])
+
 
     useEffect(() => {
         // const getData = async () => {
@@ -35,8 +47,14 @@ export default function Journal() {
         //     }
         // );
 
+        if (!user){
+            return
+        }
+
+        // const userId = 'mXTILyhRkiICJez8ccaM'
         const entriesQuery = query(
-            collection(db, 'journalEntries'),
+            // collection(db, `users/${userId}/journalEntries`),
+            collection(db, 'users', user.uid, 'journalEntries'),
             orderBy('createdAt', 'desc')
         );
         const unsubscribe = onSnapshot(
@@ -52,7 +70,7 @@ export default function Journal() {
         );
 
         return () => unsubscribe();
-    }, []);
+    }, [user]);
 
     if (error) {
         return <p>An error occurred, please try again.</p>
@@ -80,3 +98,6 @@ export default function Journal() {
         </div>
     );
 }
+
+// user id
+// F3R1Bk9t17Xh9OsnOExBjJ5g1p02

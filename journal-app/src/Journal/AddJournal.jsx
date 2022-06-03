@@ -1,14 +1,32 @@
 import { addDoc, collection } from 'firebase/firestore';
 import React, { useState } from 'react';
 import db from '../db';
+import firebase from "firebase/compat/app";
+import {useEffect} from "react";
 
 export default function AddJournal() {
     const [entry, setEntry] = useState('');
+    const [user, setUser] = useState(null);
+
+
+    useEffect(()=>{
+        const unsubscribe = firebase.auth().onAuthStateChanged(user=>{
+            console.log(user)
+            setUser(user)
+        })
+        return ()=>unsubscribe()
+    }, [])
 
     const submitForm = (e) => {
         e.preventDefault();
+
+        if (!user){
+            return window.alert('Error, user not available')
+        }
+
+
         setEntry('');
-        const entriesRef = collection(db, 'journalEntries');
+        const entriesRef = collection(db, 'users', user.uid, 'journalEntries');
         addDoc(entriesRef, {
             entry,
             createdAt: new Date()
